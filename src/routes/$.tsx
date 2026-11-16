@@ -13,7 +13,6 @@ import type { ResourceRecord } from '@/lib/resources';
 import { useRouteStylesheets, warmRouteStylesheets } from '@/lib/route-stylesheets';
 import { MORE_DOCUMENTS, moreDocumentsClass } from '@/data/more-documents';
 import { ClassHub } from '@/components/class-hub';
-import { classHubLayouts } from '@/data/class-hub-layouts';
 import type { ClassHubData } from '@/lib/class-hubs';
 
 const moreFor = (path: string) => { const key = moreDocumentsClass(path); return key ? MORE_DOCUMENTS[key] : undefined; };
