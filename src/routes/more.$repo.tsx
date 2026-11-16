@@ -62,11 +62,10 @@ export const Route = createFileRoute('/more/$repo')({
 
 function MoreDocumentsPage() {
   const result = Route.useLoaderData();
-  const ready = useRouteStylesheets(result.data.links);
+  useRouteStylesheets(result.data.links);
   return (
     <>
-      {!ready && <div className="documents-skeleton-overlay"><DocumentsSkeleton /></div>}
-      <div className={ready ? 'route-fade route-fade--in' : 'route-fade'}>
+      <div className="route-fade route-fade--in">
         <LegacyPage key={result.repo} data={result.data} fragments={result.fragments} />
       </div>
     </>
