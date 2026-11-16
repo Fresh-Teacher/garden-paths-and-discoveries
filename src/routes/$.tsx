@@ -13,7 +13,6 @@ import type { ResourceRecord } from '@/lib/resources';
 import { useRouteStylesheets, warmRouteStylesheets } from '@/lib/route-stylesheets';
 import { MORE_DOCUMENTS, moreDocumentsClass } from '@/data/more-documents';
 import { ClassHub } from '@/components/class-hub';
-import { classHubLayouts } from '@/data/class-hub-layouts';
 import type { ClassHubData } from '@/lib/class-hubs';
 
 const moreFor = (path: string) => { const key = moreDocumentsClass(path); return key ? MORE_DOCUMENTS[key] : undefined; };
@@ -26,7 +25,7 @@ const legacyPages = import.meta.glob<{ default: StaticPage<LegacyPageData> }>('.
 const legacyItems = import.meta.glob<{ default: ResourceRecord[] }>('../data/catalog/page-items/legacy/*.json');
 const resourceItems = import.meta.glob<{ default: ResourceRecord[] }>('../data/catalog/page-items/resources/*.json');
 const fragmentFiles = import.meta.glob<{ default: string }>('../data/legacy/fragments/*.json');
-const classHubs = import.meta.glob<{ default: ClassHubData }>('../data/class-hubs/*.json');
+const classHubs = import.meta.glob<{ default: ClassHubData }>('../data/class-hubs/*.json', { eager: true });
 
 // Each page's documents are pre-baked into one file (scripts/bake_page_items.py), so a page costs one small request.
 async function hydratePage<T extends { items: ResourceRecord[] }>(page: StaticPage<T>, load?: () => Promise<{ default: ResourceRecord[] }>) {
@@ -41,8 +40,8 @@ export const Route = createFileRoute('/$')({
   loader: async ({ params }) => {
     const path = (params._splat ?? '').replace(/\/+$/, '');
     if (path === 'index.html') throw redirect({ to: '/', statusCode: 301 });
-    const loadHub = classHubs[`../data/class-hubs/${path}.json`];
-    if (loadHub) return { path, kind: 'hub' as const, data: (await loadHub()).default };
+    const hub = classHubs[`../data/class-hubs/${path}.json`];
+    if (hub) return { path, kind: 'hub' as const, data: hub.default };
     const entry = manifest[path as keyof typeof manifest];
     if (!entry) {
       const legacy = legacyManifest[path as keyof typeof legacyManifest];
@@ -96,7 +95,8 @@ export const Route = createFileRoute('/$')({
 function PageSkeleton() {
   const pathname = useRouterState({ select: state => state.location.pathname });
   const path = pathname.replace(/^\/+|\/+$/g, '');
-  if (classHubLayouts[path]) return <MenuSkeleton variant="resource" path={path} />;
+  const hub = classHubs[`../data/class-hubs/${path}.json`];
+  if (hub) return <ClassHub key={path} data={hub.default} />;
   const entry = legacyManifest[path as keyof typeof legacyManifest];
   return entry?.count === 0 ? <MenuSkeleton variant={menuVariantFor(path)} /> : <DocumentsSkeleton />;
 }
