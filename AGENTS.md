@@ -66,3 +66,4 @@ use the editor.
 <!-- AGENT-MEMORY:END -->
 
 - Keep source imports scoped to application files and export tooling; preserve this project’s runtime, generated routing, and repository metadata so deployment remains project-owned.
+- Catalog pages load their documents from one pre-baked file in `src/data/catalog/page-items/` (rebuild with `scripts/bake_page_items.py` after any catalog change), so a page costs one small request instead of joining hash shards on the phone.
