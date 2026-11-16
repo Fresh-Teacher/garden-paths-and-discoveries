@@ -61,7 +61,10 @@ function Thumb({ url, initialFeedback }: { url: string; initialFeedback: boolean
   const [pages, setPages] = useState<number>();
   // The first row has feedback in static HTML, before observers or React run.
   // Actual PDF work is still exclusively started by viewport proximity.
-  const showLoading = (nearby ?? initialFeedback) && !loaded && !failed && isPdf;
+  const pending = (nearby ?? initialFeedback) && !loaded && !failed && isPdf;
+  // Cached thumbnails resolve in a few ms; hold the spinner back so it never flashes.
+  const delayed = useLoadingIndicator(pending && !src);
+  const showLoading = pending && (src ? false : initialFeedback && nearby === null ? true : delayed);
   const placeholder = documentPlaceholder(url);
   useEffect(() => {
     setSrc(null); setFailed(false); setLoaded(false); setNearby(null); setPages(undefined);
