@@ -7,7 +7,9 @@ import type { ResourcePageData } from '@/lib/resources';
 import { lazy, Suspense } from 'react';
 import legacyManifest from '@/data/legacy/manifest.json';
 import type { LegacyPageData } from '@/lib/legacy-pages';
-import { resolveDocuments, type DocumentShard, type StaticPage } from '@/lib/static-catalog';
+import type { StaticPage } from '@/lib/static-catalog';
+import { isDocumentFile } from '@/lib/document-formats';
+import type { ResourceRecord } from '@/lib/resources';
 import { useRouteStylesheets, warmRouteStylesheets } from '@/lib/route-stylesheets';
 import { MORE_DOCUMENTS, moreDocumentsClass } from '@/data/more-documents';
 import { ClassHub } from '@/components/class-hub';
@@ -21,17 +23,17 @@ const resourceStylesheets = ['bootstrap.min.css', 'font-awesome.css', 'flipbook.
 
 const pages = import.meta.glob<{ default: StaticPage<ResourcePageData> }>('../data/catalog/pages/resources/*.json');
 const legacyPages = import.meta.glob<{ default: StaticPage<LegacyPageData> }>('../data/catalog/pages/legacy/*.json');
-const documentFiles = import.meta.glob<{ default: DocumentShard }>('../data/catalog/documents/*.json');
+const legacyItems = import.meta.glob<{ default: ResourceRecord[] }>('../data/catalog/page-items/legacy/*.json');
+const resourceItems = import.meta.glob<{ default: ResourceRecord[] }>('../data/catalog/page-items/resources/*.json');
 const fragmentFiles = import.meta.glob<{ default: string }>('../data/legacy/fragments/*.json');
 const classHubs = import.meta.glob<{ default: ClassHubData }>('../data/class-hubs/*.json');
 
-async function hydratePage<T extends { items: import('@/lib/resources').ResourceRecord[] }>(page: StaticPage<T>) {
-  const items = await resolveDocuments(page.documentIds, async key => {
-    const load = documentFiles[`../data/catalog/documents/${key}.json`];
-    if (!load) throw new Error(`Missing static document shard: ${key}`);
-    return (await load()).default;
-  });
-  return { ...page, items };
+// Each page's documents are pre-baked into one file (scripts/bake_page_items.py), so a page costs one small request.
+async function hydratePage<T extends { items: ResourceRecord[] }>(page: StaticPage<T>, load?: () => Promise<{ default: ResourceRecord[] }>) {
+  if (!load) throw notFound();
+  const { documentIds: _ids, ...rest } = page;
+  const items = (await load()).default.filter(item => isDocumentFile(item.pdfUrl));
+  return { ...rest, items } as unknown as T & { recoverySource?: string };
 }
 
 export const Route = createFileRoute('/$')({
@@ -59,7 +61,7 @@ export const Route = createFileRoute('/$')({
       };
       // Document shards, HTML fragments and the page's CSS are independent, so fetch them together.
       const [data] = await Promise.all([
-        hydratePage<LegacyPageData>(page),
+        hydratePage<LegacyPageData>(page, legacyItems[`../data/catalog/page-items/legacy/${legacy.data}`]),
         Promise.all([read(page.template), read(page.styles)]),
         warmRouteStylesheets(page.links),
       ]);
@@ -68,7 +70,7 @@ export const Route = createFileRoute('/$')({
     const load = pages[`../data/catalog/pages/resources/${entry.data}`];
     if (!load) throw notFound();
     const [data] = await Promise.all([
-      load().then(module => hydratePage<ResourcePageData>(module.default)),
+      load().then(module => hydratePage<ResourcePageData>(module.default, resourceItems[`../data/catalog/page-items/resources/${entry.data}`])),
       warmRouteStylesheets(resourceStylesheets),
     ]);
     return { path, kind: 'resource' as const, data };
@@ -101,14 +103,14 @@ function PageSkeleton() {
 
 function LegacyResource() {
   const result = Route.useLoaderData();
-  const ready = useRouteStylesheets(result.kind === 'hub' ? [] : result.kind === 'legacy' ? result.data.links : resourceStylesheets);
+  // Attach the page's stylesheets; the loader already warmed them, so content shows immediately instead of behind a second skeleton.
+  useRouteStylesheets(result.kind === 'hub' ? [] : result.kind === 'legacy' ? result.data.links : resourceStylesheets);
   const page = result.kind === 'hub' ? <ClassHub key={result.path} data={result.data} /> : result.kind === 'legacy'
     ? <LegacyPage key={result.path} data={result.data} fragments={result.fragments} moreDocuments={moreFor(result.path)} />
     : <ResourcePage key={result.path} data={result.data} />;
   return (
     <>
-      {!ready && <div className="documents-skeleton-overlay"><PageSkeleton /></div>}
-      <div className={ready ? 'route-fade route-fade--in' : 'route-fade'}><Suspense fallback={<PageSkeleton />}>{page}</Suspense></div>
+      <div className="route-fade route-fade--in"><Suspense fallback={<PageSkeleton />}>{page}</Suspense></div>
     </>
   );
 }
