@@ -12,7 +12,7 @@ import { documentMetadata, documentSlug } from '@/lib/document-metadata';
 import { searchTokens, suggestedSearch } from '@/lib/document-search';
 import { DocumentDownload, DocumentShare } from '@/components/document-actions';
 import { documentViewer } from '@/lib/document-viewer';
-import { LogoLoader } from '@/components/logo-loader';
+import { LogoLoader, useLoadingIndicator } from '@/components/logo-loader';
 import { documentPlaceholder } from '@/lib/document-placeholder';
 import styles from '@/styles/document-gallery.css?raw';
 import { AdBanner } from './ad-banner';
