@@ -7,7 +7,7 @@ import { documentViewer } from '@/lib/document-viewer';
 import { downloadFile } from '@/lib/file-download';
 import { flipbookOptions, type ReadingMode } from '@/lib/flipbook-options';
 import { resourceTitle, type ResourceRecord } from '@/lib/resources';
-import { LogoLoader } from './logo-loader';
+import { LogoLoader, useLoadingIndicator } from './logo-loader';
 import media from '@/data/resource-media.json';
 
 export function DocumentViewer({ item }: { item: ResourceRecord }) {
@@ -25,7 +25,14 @@ export function DocumentViewer({ item }: { item: ResourceRecord }) {
   const ownsSource = (source: MessageEventSource | null) => Object.values(frames.current).some(f => f && f.contentWindow === source);
   const selectMode = (next: ReadingMode) => { setMode(next); setMounted(list => list.includes(next) ? list : [...list, next]); };
   useEffect(() => { setMounted([mode]); setReady({}); }, [revision, item.pdfUrl]); // eslint-disable-line react-hooks/exhaustive-deps
-  const frameLoading = !ready[mode];
+  const frameLoading = useLoadingIndicator(!ready[mode]);
+  // Safety net: never leave the spinner up forever if a reader hangs.
+  useEffect(() => {
+    if (ready[mode]) return;
+    const current = mode;
+    const timer = window.setTimeout(() => setReady(value => ({ ...value, [current]: true })), 15000);
+    return () => window.clearTimeout(timer);
+  }, [mode, ready, revision]);
   useEffect(() => {
     if (ready[mode]) return;
     const current = mode;

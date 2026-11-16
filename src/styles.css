@@ -879,3 +879,10 @@ a, button, [role="button"], summary, label { touch-action: manipulation; -webkit
 .document-reader-tools { gap:6px; }
 .document-reader-tools .document-reader-control { width:40px; height:40px; min-width:40px; padding:0; border-radius:50%; background:var(--card); border:1px solid var(--catalog-border); box-shadow:0 1px 3px rgb(0 0 0 / .08); }
 .document-reader-control svg { width:18px !important; height:18px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-loader-ring,
+  .dg-thumb-loading .logo-loader-ring,
+  .viewer-loading-overlay .logo-loader-ring,
+  .document-reader-loading .logo-loader-ring { animation: none !important; }
+}
