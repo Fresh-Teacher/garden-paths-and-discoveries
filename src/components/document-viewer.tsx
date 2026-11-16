@@ -22,7 +22,6 @@ export function DocumentViewer({ item }: { item: ResourceRecord }) {
   const [ready, setReady] = useState<Partial<Record<ReadingMode, boolean>>>({});
   const reader = useRef<HTMLDivElement>(null);
   const frames = useRef<Partial<Record<ReadingMode, HTMLIFrameElement | null>>>({});
-  const activeWindow = () => frames.current[mode]?.contentWindow;
   const ownsSource = (source: MessageEventSource | null) => Object.values(frames.current).some(f => f && f.contentWindow === source);
   const selectMode = (next: ReadingMode) => { setMode(next); setMounted(list => list.includes(next) ? list : [...list, next]); };
   useEffect(() => { setMounted([mode]); setReady({}); }, [revision, item.pdfUrl]); // eslint-disable-line react-hooks/exhaustive-deps
