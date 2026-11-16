@@ -9,9 +9,9 @@ import { searchLibrary } from '@/lib/library-search';
 import { resourceTitle } from '@/lib/resources';
 
 describe('Unified repository catalog', () => {
-  it('includes every one of the 60 menu repositories with all extracted references', async () => {
+  it('includes every menu repository with all extracted references', async () => {
     const targets = [...new Set([...Object.values(MORE_DOCUMENTS).flat().map(r => r.repo), ...Object.values(EXAMS_REPOS).map(r => r.repo), PACKAGES_REPO.repo])];
-    expect(targets).toHaveLength(60);
+    expect(targets).toHaveLength(67);
     expect(Object.keys(manifest.repositories).sort()).toEqual(targets.sort());
     let count = 0;
     for (const repo of targets) {
