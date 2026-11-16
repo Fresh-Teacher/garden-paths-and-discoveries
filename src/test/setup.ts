@@ -18,3 +18,18 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+// jsdom has no IntersectionObserver, but the ad spaces use one to wait until they are near the screen.
+// configurable keeps per-test stubbing of the same global working.
+Object.defineProperty(window, "IntersectionObserver", {
+  writable: true,
+  configurable: true,
+  value: class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  },
+});
