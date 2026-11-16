@@ -61,7 +61,7 @@ export function ClassHub({ data }: { data: ClassHubData }) {
   return <div ref={root}><ClassHubLayout heading={data.heading}>
     {data.menus.map((menu, index) => menu.href ? <div id={`class-group-${index}`} className={`btn-group m-r-10 ${menu.featured ? 'class-resource-featured' : ''}`} key={menu.label}>
       <Button asChild variant="source" size="source" className="btn btn-info waves-effect waves-light legacy-control"><a href={menu.href}><b>{menu.label}</b>{menu.featured && <span className="class-resource-new"><span>NEW!</span></span>}</a></Button>
-    </div> : <details id={`class-group-${index}`} name="class-resources" data-native-dropdown className={`btn-group m-r-10 ${menu.featured ? 'class-resource-featured' : ''}`} key={menu.label}>
+    </div> : <details suppressHydrationWarning id={`class-group-${index}`} name="class-resources" data-native-dropdown className={`btn-group m-r-10 ${menu.featured ? 'class-resource-featured' : ''}`} key={menu.label}>
       <Button asChild variant="source" size="source" className="btn btn-info dropdown-toggle waves-effect waves-light legacy-control legacy-dropdown-trigger">
         <summary id={`class-trigger-${index}`} data-toggle="dropdown" aria-controls={`class-menu-${index}`} onKeyDown={event => openFromKeyboard(event, index)}>
           <b>{menu.label}</b>{menu.featured && <span className="class-resource-new"><span>NEW!</span></span>}
